@@ -1,13 +1,29 @@
-import React from "react"
+import { promises as fs } from "fs"
+import path from "path"
+import React, { useEffect, useState } from "react"
 import Head from "next/head"
 import { useRouter } from "next/router"
-import { PrimeReactProvider } from "primereact/api"
+import { z } from "zod"
 
 import AddTask from "@/components/AddTask"
-import TaskList from "@/components/TaskList"
 import { Layout } from "@/components/layout"
+import { DataTable } from "@/components/tasks/DataTable"
+import { columns } from "@/components/tasks/columns"
+import { Task, taskSchema } from "@/components/tasks/schema"
+import * as taskList from "@/components/tasks/tasks.json"
+
+// Simulate a database read for tasks.
+function getTasks() {
+  // const data = await fs.readFile(
+  //   path.join(process.cwd(), "app/examples/tasks/data/tasks.json")
+  // )
+  const tasks = JSON.parse(taskList.toString())
+  return z.array(taskSchema).parse(tasks)
+}
 
 const Tasks = () => {
+  // const tasks = await getTasks()
+  const [tasks, setTasks] = useState(taskList)
   const router = useRouter()
   const { user } = router.query
 
@@ -27,7 +43,7 @@ const Tasks = () => {
           <AddTask />
 
           <div className="scroll-auto">
-            <TaskList />
+            <DataTable data={tasks} columns={columns} />
           </div>
         </section>
       </Layout>
