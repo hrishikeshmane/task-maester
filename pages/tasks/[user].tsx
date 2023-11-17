@@ -1,9 +1,8 @@
-import { promises as fs } from "fs"
-import path from "path"
 import React, { useEffect, useState } from "react"
 import Head from "next/head"
 import { useRouter } from "next/router"
-import { z } from "zod"
+import supabase from "@/supabaseClient"
+import { useRealtime } from "react-supabase"
 
 import AddTask from "@/components/AddTask"
 import { Layout } from "@/components/layout"
@@ -12,18 +11,48 @@ import { columns } from "@/components/tasks/columns"
 import { Task, taskSchema } from "@/components/tasks/schema"
 import * as taskList from "@/components/tasks/tasks.json"
 
-// Simulate a database read for tasks.
-function getTasks() {
-  // const data = await fs.readFile(
-  //   path.join(process.cwd(), "app/examples/tasks/data/tasks.json")
-  // )
-  const tasks = JSON.parse(taskList.toString())
-  return z.array(taskSchema).parse(tasks)
-}
-
 const Tasks = () => {
-  // const tasks = await getTasks()
-  const [tasks, setTasks] = useState(taskList)
+  const [tasks, setTasks] = useState<Task[]>([])
+
+  const fetchTodos = async () => {
+    let { data: todos, error } = await supabase.from("todos").select("*")
+    setTasks(todos)
+  }
+
+  useEffect(() => {
+    fetchTodos()
+  }, [])
+
+  useEffect(() => {
+    const taskListener = supabase
+      .channel("public")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "todos" },
+        (payload) => {
+          console.log("Change received!", payload)
+          if (payload.eventType === "INSERT") {
+            setTasks((tasks) => [...tasks, payload.new])
+          }
+          if (payload.eventType === "DELETE") {
+            setTasks((tasks) =>
+              tasks.filter((task) => task.id !== payload.old.id)
+            )
+          }
+          if (payload.eventType === "UPDATE") {
+            setTasks((tasks) =>
+              tasks.map((task) =>
+                task.id === payload.new.id ? payload.new : task
+              )
+            )
+          }
+        }
+      )
+      .subscribe()
+
+    return () => taskListener.unsubscribe()
+  }, [tasks])
+
   const router = useRouter()
   const { user } = router.query
 

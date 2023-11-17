@@ -1,7 +1,9 @@
 import type { AppProps } from "next/app"
 import { Inter as FontSans } from "@next/font/google"
 import { ThemeProvider } from "next-themes"
+import { Provider } from "react-supabase"
 
+import supabase from "../supabaseClient"
 import "@/styles/globals.css"
 
 const fontSans = FontSans({
@@ -18,9 +20,11 @@ export default function App({ Component, pageProps }: AppProps) {
           --font-sans: ${fontSans.style.fontFamily};
         }
       `}</style>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <Component {...pageProps} />
-      </ThemeProvider>
+      <Provider value={supabase}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Component {...pageProps} />
+        </ThemeProvider>
+      </Provider>
     </>
   )
 }

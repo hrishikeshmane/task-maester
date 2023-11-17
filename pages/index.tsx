@@ -3,10 +3,15 @@ import Head from "next/head"
 import { useRouter } from "next/router"
 
 import { Layout } from "@/components/layout"
+import { DataTable } from "@/components/tasks/DataTable"
+import { columns } from "@/components/tasks/columns"
+import * as taskList from "@/components/tasks/tasks.json"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 export default function IndexPage() {
+  const [tasks, setTasks] = useState(taskList.slice(0, 6))
+
   const [userName, setUserName] = useState("hrishi")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -73,6 +78,9 @@ export default function IndexPage() {
             </svg>
           </Button>
         </div>
+      </section>
+      <section className="container my-10 grid items-center gap-6  pb-8 pt-6 md:py-10">
+        <DataTable data={tasks} columns={columns} />
       </section>
     </Layout>
   )

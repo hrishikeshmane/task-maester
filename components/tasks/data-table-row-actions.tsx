@@ -2,6 +2,7 @@
 
 import { DotsHorizontalIcon } from "@radix-ui/react-icons"
 import { Row } from "@tanstack/react-table"
+import { useClient } from "react-supabase"
 
 import { Button } from "../ui/button"
 import {
@@ -29,19 +30,29 @@ export function DataTableRowActions<TData>({
 }: DataTableRowActionsProps<TData>) {
   const task = taskSchema.parse(row.original)
 
+  const supabase = useClient()
+
+  const editTaskhandler = async () => {
+    await supabase
+      .from("todos")
+      .update({ title: "Update Title" })
+      .eq("id", task.id)
+      .select()
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="data-[state=open]:bg-muted flex h-8 w-8 p-0"
+          className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
         >
           <DotsHorizontalIcon className="h-4 w-4" />
           <span className="sr-only">Open menu</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[160px]">
-        <DropdownMenuItem>Edit</DropdownMenuItem>
+        <DropdownMenuItem onClick={editTaskhandler}>Edit</DropdownMenuItem>
         <DropdownMenuItem>Make a copy</DropdownMenuItem>
         <DropdownMenuItem>Favorite</DropdownMenuItem>
         <DropdownMenuSeparator />
